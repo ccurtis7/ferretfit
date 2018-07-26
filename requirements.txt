@@ -2,3 +2,5 @@ numpy
 scipy
 matplotlib
 pandas
+statsmodels
+boto3

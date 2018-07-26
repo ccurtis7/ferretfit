@@ -1,6 +1,11 @@
-*.py[co]
-*~
-*.DS_Store
-_build/
-auto_examples/
-gen_api/
+ferretfit/__pycache__
+*.csv
+*.tif
+ferretfit/notebooks/.ipynb_checkpoints/*
+*.cache
+ferretfit/tests/__pycache__
+*-checkpoint.ipynb
+*.pyc
+*.egg-info
+*.swp
+*.png

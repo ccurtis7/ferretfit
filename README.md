@@ -13,7 +13,7 @@ Currently, the analysis is performed in a two-step process: (1) ImageJ extractio
 
 Users take a screenshot of the final output from the Noldus CatwalkXT analysis. Users must also make sure to crop the images to the area of interest e.g.:
 
-
+<p align="center"><img src="https://github.com/ccurtis7/ferretfit/blob/master/doc/N_P1_R1.png" /></p>
 
 The ImageJ macro converts the image to a binary image, and calculates coordinates of the footprints based on the boxes the initial software uses to label the footprints. The current weakness of this method is threefold: (1) overlapping footprints are sometimes not distinguishable if the Watershed algorithm doesn't catch it, (2) if any of the text overlaps, these can sometimes be caught as extra tracks, and (3) any small footprints sometimes are edited out in one of the erosion steps.
 

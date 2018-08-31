@@ -11,7 +11,7 @@ from scipy.optimize import leastsq
 from scipy.stats import sem
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-import diff_classifier.aws as aws
+import ferretfit.aws as aws
 
 
 class Bunch:
@@ -206,7 +206,7 @@ def fit_sine(x, y, gfr=1/150):
 
     Examples
     --------
-    
+
 
     """
 

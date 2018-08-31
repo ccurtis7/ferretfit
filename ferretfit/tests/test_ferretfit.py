@@ -48,6 +48,3 @@ def test_rectangle_intersection():
     x, y = ff.rectangle_intersection(x1, y1, x1, y2)
     assert x.tolist() == [0, 0, 1]
     assert y.tolist() == [0, 1, 0]
-
-
-def test_():

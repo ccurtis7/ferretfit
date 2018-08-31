@@ -1,4 +1,7 @@
 numpy
 scipy
 matplotlib
+boto3
 pandas
+statsmodels
+patsy

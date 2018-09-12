@@ -296,7 +296,7 @@ def ferret_fit(folder, prefix, download=True, bucket_name='ccurtis.data'):
 
     ffparams = Bunch(ystd=ystd, yrange=yrange, rsd=rsd, amp=np.abs(eamp),
                      period=1/efr, pawcount=pawcount, pawdens=pawdens,
-                     cross=cross, crossdens=crossdens, stride=strid,
+                     cross=cross, crossdens=crossdens, stride=stride,
                      stridestd=stridestd)
 
     print('Video to analyze: {}'.format(filename))

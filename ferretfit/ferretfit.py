@@ -11,7 +11,7 @@ from scipy.optimize import leastsq
 from scipy.stats import sem
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
-import ferretfit.aws as aws
+import diff_classifier.aws as aws
 
 
 class Bunch:
@@ -298,6 +298,113 @@ def ferret_fit(folder, prefix, download=True, bucket_name='ccurtis.data'):
                      period=1/efr, pawcount=pawcount, pawdens=pawdens,
                      cross=cross, crossdens=crossdens, stride=stride,
                      stridestd=stridestd)
+
+    print('Video to analyze: {}'.format(filename))
+    print('Deviation from midline: {}'.format(ystd))
+    print('Range in y: {}'.format(yrange))
+    print('Percent deviation from midline: {}'.format(rsd))
+    print('Fit amplitude: {}'.format(np.abs(np.round(eamp, 2))))
+    print('Number of intersections: {}'.format(cross))
+    print('Number of intersections per 100 pixels: {}'.format(np.round(crossdens
+                                                                       )))
+    print('Number of footprints: {}'.format(pawcount))
+    print('Number of footprints per 100 pixels: {}'.format(np.round(pawdens)))
+    print('Average stride: {}'.format(np.round(stride)))
+    print('Stride deviation: {}'.format(np.round(stridestd)))
+    print('Fit period: {}\n'.format(np.round(1/efr, 2)))
+
+    return ffparams
+
+
+def ferret_fit_color(folder, prefix, download=True, bucket_name='ccurtis.data',
+                     plot=True):
+
+    filename = '{}.csv'.format(prefix)
+    if download:
+        aws.download_s3('{}/{}'.format(folder, filename), filename,
+                        bucket_name=bucket_name)
+    ferret_data = pd.read_csv(filename)
+    ferret_data = ferret_data.sort_values(by=['X'])
+    length = ferret_data.shape[0]
+
+    x = ferret_data['X']
+    y = ferret_data['Y']
+    fine_t, data_fit, eamp, efr = fit_sine(x, y, gfr=1/100)
+
+    lowess = sm.nonparametric.lowess
+    ymid = lowess(y, x, frac=0.3)
+    yavg = np.convolve(y, np.ones((length,))/length, mode='same')
+
+    strait = np.mean(y)*np.ones((length,))
+    intersections = intersection(x, ymid[:, 1], x, strait)
+    pawcount = len(x)
+    pawdens = np.abs(100*pawcount/(max(x) - min(x)))
+    stride = np.mean(np.diff(x))
+    stridestd = np.std(np.diff(x))
+    
+    if plot:
+        plt.figure(figsize=(10, 5))
+        plt.scatter(x, y, s=300)
+        plt.plot(x, ymid[:, 1], linewidth=6)
+        plt.plot(x, strait, 'k', linewidth=6)
+        plt.plot(fine_t, data_fit, 'm', linewidth=6)
+        # plt.plot(x, yavg, 'k', linewidth=6)
+        plt.ylim(0, 120)
+        imfile = '{}_fit.png'.format(prefix)
+        plt.savefig(imfile)
+        aws.upload_s3(imfile, '{}/{}'.format(folder, imfile),
+                      bucket_name='ccurtis.data')
+
+    ystd = np.round(np.std(y), 2)
+    yrange = np.round(np.ptp(y), 2)
+    rsd = 100*np.round(ystd/np.mean(y), 2)
+    cross = len(intersections[0])
+    crossdens = np.abs(100*cross/(max(x) - min(x)))
+
+    ffparams = Bunch(ystd=ystd, yrange=yrange, rsd=rsd, amp=np.abs(eamp),
+                     period=1/efr, pawcount=pawcount, pawdens=pawdens,
+                     cross=cross, crossdens=crossdens, stride=stride,
+                     stridestd=stridestd)
+    
+    feet = ['LH', 'RH', 'LF', 'RF']
+    ystdfoot = {}
+    yrangefoot = {}
+    yrsdfoot = {}
+
+    download = True
+    for foot in feet:
+        filename = '{}_{}.csv'.format(prefix, foot)
+        if download:
+            aws.download_s3('{}/{}'.format(folder, filename), filename,
+                            bucket_name=bucket_name)
+        ferret_data = pd.read_csv(filename)
+        #ferret_data = ferret_data.sort_values(by=['X'])
+        #if feet in ['LH', 'RH']:
+        #    if ferret_data.shape([0]) < 4:
+        #        ferret_data = ferret_data
+        #    else:
+        #ferret_data = ferret_data[ferret_data['Area'] > 199]
+        #else:
+        #    ferret_data = ferret_data
+
+        ferret_data1 = ferret_data[ferret_data['Area'] > 500]
+        y = ferret_data1['Y']
+        if y.shape[0] < 2:
+            ferret_data1 = ferret_data[ferret_data['Area'] > 200]
+            y = ferret_data1['Y']
+        if y.shape[0] < 2:
+            ferret_data1 = ferret_data
+            y = ferret_data1['Y']
+        if y.shape[0] < 2:
+            y = np.ones(1)
+        
+        ystdfoot[foot] = np.round(np.std(y), 2)
+        yrangefoot[foot] = np.round(np.ptp(y), 2)
+        yrsdfoot[foot] = 100*np.round(ystdfoot[foot]/np.mean(y), 2)
+                
+    ffparams.ystdfoot = ystdfoot
+    ffparams.yrangefoot = yrangefoot
+    ffparams.yrsdfoot = yrsdfoot
 
     print('Video to analyze: {}'.format(filename))
     print('Deviation from midline: {}'.format(ystd))
